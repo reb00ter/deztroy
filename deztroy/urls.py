@@ -16,6 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from u24.views import CategoriesJSON
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('json/categories', CategoriesJSON.as_view(), name='categories_json'),
+
 ]
