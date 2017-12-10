@@ -1,0 +1,40 @@
+ul.categories{
+    list-style-type: none;
+}
+span.expander{
+    cursor: default;
+    font-weight: bold;
+    margin-left: -13px;
+}
+.category.title{
+    cursor: pointer;
+}
+div.ad{
+    outline: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    position: relative;
+}
+div.ad .remover{
+    position: absolute;
+    right: 5px;
+    top: 0;
+    cursor: pointer;
+}
+
+div.ad .edit{
+    position: absolute;
+    right: 20px;
+    top: 0;
+    cursor: pointer;
+}
+
+span.helptext {
+    font-size: 12px;
+    position: relative;
+    top: -20px;
+}
+
+label{
+    font-weight: bold;
+}

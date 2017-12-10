@@ -1,0 +1,142 @@
+{% load staticfiles %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Выгружаемые объявления</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="{% static "u24/js/foundation.min.js" %}"></script>
+    <link rel="stylesheet" href="{% static "u24/css/foundation.min.css" %}">
+    <link rel="stylesheet" href="{% static "u24/css/app.css" %}">
+    <script src="https://unpkg.com/vue"></script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                let cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</head>
+<body>
+    {% verbatim %}
+    <div id="app">
+        <div class="grid-container">
+            <div class="grid-x">
+                <div class="small-4">
+                    <h2>Категории</h2>
+                    <div class="category title" v-on:click="ads_all">Все</div>
+                    <ul class="categories">
+                        <li v-for="category in categories">
+                            <span v-if="category.items.length>0" v-on:click="category.opened=!category.opened" class="expander">+</span>
+                            <span class="category title" v-on:click="ads_by_cat(category)">{{ category.title }}</span>
+                            <ul v-if="category.items.length>0" v-show="category.opened">
+                                <li v-for="subcategory in category.items" class="sub category title" v-on:click="ads_by_sub(subcategory)">{{ subcategory.title }}</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <hr style="margin-right: 10px;">
+    {% endverbatim %}
+                    <a href="{% url "create_ad" %}">Добавить объявление</a><br>
+                    <a href="{% url "cron" %}">Выгрузить</a>
+    {% verbatim %}
+                </div>
+                <div class="small-8">
+                    <div class="ads">
+                        <h2>{{ selected }}</h2>
+                        <div class="ad" v-for="ad in ads">
+                            <h4>{{ ad.title }}</h4>
+                            <div class="remover" v-on:click="remove(ad)">X</div>
+                            <div class="edit" v-on:click="edit(ad)">[Править]</div>
+                            <div class="text">{{ ad.text }}</div>
+                            <div class="photos"><span v-for="photo in ad.photos"><img v-bind:src="photo"></span> </div>
+                            <div>Обновляется каждые {{ ad.interval }} минут</div>
+                            <div>Текущий статус <strong>{{ ad.status }}</strong> (последнее обновление {{ ad.status_changed }})</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endverbatim %}
+    {% csrf_token %}
+<script>
+    let data = {
+        categories: [],
+        ads: [],
+        selected: "Все",
+        currentCat: null,
+        currentSub: null,
+    };
+    function refresh_ads() {
+        if(data.currentSub != null){
+            $.getJSON("{% url 'ads_json' %}?sub="+data.currentSub.id, function (json) {
+                data.ads = json;
+                data.selected = data.currentSub.title;
+            });
+        }
+        else if(data.currentCat != null){
+            $.getJSON("{% url 'ads_json' %}?cat="+data.currentCat.id, function (json) {
+                data.ads = json;
+                data.selected = data.currentCat.title;
+            });
+        }
+        else{
+            $.getJSON("{% url 'ads_json' %}", function (json) {
+                data.ads = json;
+                data.selected = "Все";
+            });
+        }
+    }
+    let app = new Vue({
+        el: '#app',
+        data: data,
+        created: function () {
+            $.getJSON("{% url 'categories_json' %}", function (json) {
+                data.categories = json;
+            });
+            $.getJSON("{% url 'ads_json' %}", function (json) {
+                data.ads = json;
+            });
+        },
+        methods:{
+            ads_all: function (event) {
+                data.currentCat = null;
+                data.currentSub = null;
+                refresh_ads();
+            },
+            ads_by_cat: function (category) {
+                data.currentCat = category;
+                data.currentSub = null;
+                refresh_ads();
+            },
+            ads_by_sub: function (subcategory) {
+                data.currentCat = null;
+                data.currentSub = subcategory;
+                refresh_ads();
+            },
+            remove: function (ad)
+            {
+                let csrf = getCookie('csrftoken');
+                if(confirm("Действительно удалить объявление "+ad.title))
+                    $.post('/ad/'+ad.id+'/delete', {csrfmiddlewaretoken: csrf}).done(function () {
+                        refresh_ads()
+                    });
+            },
+            edit: function (ad) {
+                window.location.href='/admin/u24/advert/'+ad.id+'/change/';
+            }
+        }
+    });
+</script>
+</body>
+</html>

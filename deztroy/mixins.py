@@ -23,3 +23,4 @@ class JSONResponseMixin:
         # objects -- such as Django model instances or querysets
         # -- can be serialized as JSON.
         return context
+

@@ -59,7 +59,7 @@ class Phone(models.Model):
             return "8(%s)%s-%s-%s" % (self.num[0:3], self.num[3:5], self.num[5:7], self.num[7:10])
 
     def get_random_variant(self):
-        variant = random.random(6)
+        variant = random.randint(0, 5)
         return self.get_variant(variant)
 
     class Meta:
@@ -69,6 +69,12 @@ class Phone(models.Model):
 
 class U24Thumbnail(ImageSpec):
     processors = [Transpose(), ResizeToFill(800, 600)]
+    format = 'JPEG'
+    options = {'quality': 80}
+
+
+class PreviewThumbnail(ImageSpec):
+    processors = [Transpose(), ResizeToFill(100, 100)]
     format = 'JPEG'
     options = {'quality': 80}
 
@@ -95,12 +101,14 @@ class Advert(models.Model):
     photo2 = models.ImageField(verbose_name="Фото2", null=True, blank=True)
     photo3 = models.ImageField(verbose_name="Фото3", null=True, blank=True)
     photo4 = models.ImageField(verbose_name="Фото4", null=True, blank=True)
-    interval = models.PositiveSmallIntegerField(verbose_name="интервал", help_text="в минутах")
+    interval = models.PositiveSmallIntegerField(verbose_name="интервал", default=0,
+                                                help_text="в минутах, 0 - приостановить автоматическое обновление")
     phones = models.ManyToManyField(Phone, verbose_name="выбранные телефоны")
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=WAITING, verbose_name="статус")
     status_changed = models.DateTimeField(auto_now=True)
     remove_link = models.URLField(verbose_name="URL для удаления", null=True, blank=True)
-    last_post = models.DateTimeField(verbose_name="последнее размещение")
+    last_post = models.DateTimeField(verbose_name="последнее размещение", null=True, blank=True)
+    response_text = models.CharField(verbose_name="ответ сервера", max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -127,8 +135,8 @@ class Advert(models.Model):
 
         def add_thumb_if_not_none(files, field):
             from imagekit.cachefiles import ImageCacheFile
-            if field is not None:
-                image_generator = U24Thumbnail(source=self.photo1.file)
+            if field:
+                image_generator = U24Thumbnail(source=field.file)
                 file = ImageCacheFile(image_generator)
                 file.generate()
                 files.append(("userfile[]", open(os.path.join("media", file.name), 'rb')))
@@ -182,13 +190,16 @@ class Advert(models.Model):
                 else:
                     ad.status = cls.ERROR_APROOVE
                 ad.response_text = r.status_code
+                ad.status_changed = datetime.datetime.now()
                 ad.save()
                 try:
                     remove_start = msg_text.find("http", aproove_end)
                     ad.remove_link = msg_text[remove_start:]
+                    ad.status_changed = datetime.datetime.now()
                     ad.save()
                     return True
                 except:
                     ad.response_text = "ошибка поиска ссылки для удаления remove_start=" + remove_start.__str__()
+                    ad.status_changed = datetime.datetime.now()
                     ad.save()
                     return False
