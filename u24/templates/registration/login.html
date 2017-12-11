@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Добавить объявление</title>
+    <title>Авторизация</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="{% static "u24/js/foundation.min.js" %}"></script>
@@ -14,10 +14,10 @@
     <div class="grid-container">
         <div class="grid-x">
             <div class="small-12">
-                <h4>Добавить объявление</h4>
+                <h4>Авторизация</h4>
                 <form method="post">{% csrf_token %}
                     {{ form.as_p }}
-                    <input type="submit" value="Добавить" class="button"> <button onclick="window.location.href='/'" class="button">Отмена</button>
+                    <input type="submit" value="Войти" class="button"> <button onclick="window.location.href='/'" class="button">Отмена</button>
                 </form>
             </div>
         </div>

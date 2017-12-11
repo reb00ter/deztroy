@@ -17,11 +17,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
+from django.contrib.auth import views as auth_views
+
 
 from u24.views import CategoriesJSON, Index, AdsJSON, AdvertCreate, AdvertUpdate, AdvertDelete, cron
 
 urlpatterns = [
     path('', Index.as_view(), name='index'),
+    path('user/', auth_views.LoginView.as_view(), name="login"),
+    path('logoff/', auth_views.LogoutView.as_view(), name="logout"),
     path('json/categories', CategoriesJSON.as_view(), name='categories_json'),
     path('json/ads', AdsJSON.as_view(), name='ads_json'),
     path('cron', cron, name='cron'),

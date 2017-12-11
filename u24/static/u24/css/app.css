@@ -38,3 +38,7 @@ span.helptext {
 label{
     font-weight: bold;
 }
+
+ul.errorlist{
+    color: red;
+}
