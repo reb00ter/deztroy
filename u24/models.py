@@ -7,7 +7,9 @@ import requests
 from django.db import models
 
 # Create your models here.
+from django.dispatch import receiver
 from django_mailbox.models import Mailbox
+from django_mailbox.signals import message_received
 from imagekit import ImageSpec
 from pilkit.processors import Transpose, ResizeToFill
 from urllib3.exceptions import IncompleteRead
@@ -200,3 +202,14 @@ class Advert(models.Model):
                 ad.response_text = "ошибка поиска ссылки для удаления remove_start=" + remove_start.__str__()
                 ad.save()
                 return False
+
+
+@receiver(message_received)
+def process_mail(sender, message, **args):
+    try:
+        from_header = message.from_header
+    except:
+        return
+    if (from_header != 'noreply@uhta24.ru') and (from_header != 'Uhta24 <noreply@uhta24.ru>'):
+        return
+    Advert.fill_ad_by_message(message)
