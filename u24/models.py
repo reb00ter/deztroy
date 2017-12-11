@@ -212,4 +212,5 @@ def process_mail(sender, message, **args):
         return
     if (from_header != 'noreply@uhta24.ru') and (from_header != 'Uhta24 <noreply@uhta24.ru>'):
         return
-    Advert.fill_ad_by_message(message)
+    if Advert.fill_ad_by_message(message.text):
+        message.delete()
