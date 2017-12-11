@@ -120,9 +120,7 @@ class Advert(models.Model):
         if available_phones.count() == 0:
             available_phones = Phone.objects.all()
         assert available_phones.count() > 0
-
         phone = available_phones.order_by('?').first()
-
         post_data = [
             ("chpodrazdel", self.subcategory.category.u24id),
             ("obtext", self.text.encode('windows-1251')),
@@ -139,13 +137,13 @@ class Advert(models.Model):
                 image_generator = U24Thumbnail(source=field.file)
                 file = ImageCacheFile(image_generator)
                 file.generate()
-                files.append(("userfile[]", open(os.path.join("media", file.name), 'rb')))
+                print(file.path)
+                files.append(("userfile[]", open(file.path, 'rb')))
 
         add_thumb_if_not_none(post_files, self.photo1)
         add_thumb_if_not_none(post_files, self.photo2)
         add_thumb_if_not_none(post_files, self.photo3)
         add_thumb_if_not_none(post_files, self.photo4)
-
         url = "http://www.uhta24.ru/obyavlenia/dobavit/"
         try:
             r = requests.post(url, data=post_data, files=post_files)
@@ -179,27 +177,26 @@ class Advert(models.Model):
         adv_end = msg_text.find("\r\n\r\n", adv_start)
         adv_text = msg_text[adv_start:adv_end]
         for ad in cls.objects.filter(status=cls.SENT):
-            if ad.text == adv_text:
-                remove_start = 0
-                aproove_start = msg_text.find("http")
-                aproove_end = msg_text.find("\r\n\r\n", aproove_start)
-                aproove_link = msg_text[aproove_start:aproove_end]
-                r = requests.get(aproove_link)
-                if r.status_code == requests.codes.ok:
-                    ad.status = cls.PUBLISHED
-                else:
-                    ad.status = cls.ERROR_APROOVE
-                ad.response_text = r.status_code
-                ad.status_changed = datetime.datetime.now()
+            if ad.text != adv_text:
+                continue
+            remove_start = 0
+            aproove_start = msg_text.find("http")
+            aproove_end = msg_text.find("\r\n\r\n", aproove_start)
+            aproove_link = msg_text[aproove_start:aproove_end]
+            r = requests.get(aproove_link)
+            if r.status_code == requests.codes.ok:
+                ad.status = cls.PUBLISHED
+            else:
+                ad.status = cls.ERROR_APROOVE
+            ad.response_text = r.status_code
+            ad.status_changed = datetime.datetime.now()
+            ad.save()
+            try:
+                remove_start = msg_text.find("http", aproove_end)
+                ad.remove_link = msg_text[remove_start:]
                 ad.save()
-                try:
-                    remove_start = msg_text.find("http", aproove_end)
-                    ad.remove_link = msg_text[remove_start:]
-                    ad.status_changed = datetime.datetime.now()
-                    ad.save()
-                    return True
-                except:
-                    ad.response_text = "ошибка поиска ссылки для удаления remove_start=" + remove_start.__str__()
-                    ad.status_changed = datetime.datetime.now()
-                    ad.save()
-                    return False
+                return True
+            except:
+                ad.response_text = "ошибка поиска ссылки для удаления remove_start=" + remove_start.__str__()
+                ad.save()
+                return False
