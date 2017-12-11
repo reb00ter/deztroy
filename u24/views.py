@@ -2,16 +2,15 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.db.models.fields.files import ImageFieldFile
 from django.http import HttpResponse
-from django.shortcuts import render
 
 # Create your views here.
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import ListView, TemplateView, CreateView, UpdateView, DeleteView
+from django.views.generic import TemplateView, CreateView, UpdateView, DeleteView
 from django_mailbox.models import Mailbox
 
 from deztroy.mixins import JSONResponseMixin
-from u24.models import Category, SubCategory, Advert, PreviewThumbnail
+from u24.models import Category, Advert, PreviewThumbnail
 
 
 class Index(LoginRequiredMixin, TemplateView):

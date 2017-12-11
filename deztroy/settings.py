@@ -127,7 +127,7 @@ MEDIA_URL = '/media/'
 
 LOGIN_URL = "/user/"
 LOGOUT_URL = "/logoff/"
-
+LOGIN_REDIRECT_URL = "/"
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 EMAIL_HOST = 'smtp.yandex.ru'
