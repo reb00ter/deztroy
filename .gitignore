@@ -110,3 +110,4 @@ db.sqlite3
 deztroy/__pycache__/
 u24/__pycache__/
 u24/migrations/__pycache__/
+media/
