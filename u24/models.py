@@ -117,10 +117,7 @@ class Advert(models.Model):
 
     def send(self):
         was_error = False
-        if self.remove_link != "":
-            requests.get(self.remove_link)
-            self.status = self.WAITING
-            self.save()
+        self.remove()
         mboxes = Mailbox.objects.filter(active=True).order_by('?')
         available_phones = self.phones
         if available_phones.count() == 0:
