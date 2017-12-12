@@ -168,7 +168,7 @@ class Advert(models.Model):
         verbose_name_plural = "объявления"
 
     def remove(self):
-        if self.remove_link != "":
+        if self.remove_link and self.remove_link != "":
             r = requests.get(self.remove_link)
             return r.status_code == 200
         return True
