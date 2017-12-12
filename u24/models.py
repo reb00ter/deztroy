@@ -64,6 +64,12 @@ class Phone(models.Model):
         variant = random.randint(0, 5)
         return self.get_variant(variant)
 
+    def get_default_variant(self):
+        return self.num
+
+    def get_phone(self):
+        return self.get_default_variant()
+
     class Meta:
         verbose_name = "телефон"
         verbose_name_plural = "телефоны"
@@ -127,7 +133,7 @@ class Advert(models.Model):
         post_data = [
             ("chpodrazdel", self.subcategory.category.u24id),
             ("obtext", self.text.encode('windows-1251')),
-            ("obtelefon", phone.get_random_variant().encode('windows-1251')),
+            ("obtelefon", phone.get_phone().encode('windows-1251')),
             ("obemail", mboxes[0].from_email),
             ("chpunkt", self.subcategory.u24id),
             ("punkt3", self.subcategory.u24id)
