@@ -15,6 +15,13 @@ from pilkit.processors import Transpose, ResizeToFill
 from urllib3.exceptions import IncompleteRead
 
 
+class NonStrippingCharField(models.CharField):
+    """CharField который не стрипит пробелы"""
+    def formfield(self, **kwargs):
+        kwargs['strip'] = False
+        return super(NonStrippingCharField, self).formfield(**kwargs)
+
+
 class Category(models.Model):
     title = models.CharField(verbose_name="название", max_length=255)
     u24id = models.PositiveSmallIntegerField(verbose_name="код раздела", help_text="Код раздела на Ухта24")
@@ -41,7 +48,7 @@ class SubCategory(models.Model):
 
 
 class Phone(models.Model):
-    num = models.CharField(max_length=10, verbose_name="номер", help_text="обязтельно без 8")
+    num = NonStrippingCharField(max_length=10, verbose_name="номер", help_text="обязтельно без 8")
 
     def __str__(self):
         return self.num
