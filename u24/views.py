@@ -115,7 +115,7 @@ def cron(request):
             ad.send()
         if ad.status == ad.WAITING:
             ad.send()
-        if ad.last_post is not None:
+        if ad.last_post is not None and (ad.status != ad.SENT):
             dt = timezone.now()-ad.last_post
             if dt > timezone.timedelta(minutes=ad.interval):
                 ad.send()

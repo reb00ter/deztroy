@@ -183,6 +183,9 @@ class Advert(models.Model):
     def remove(self):
         if self.remove_link and self.remove_link != "":
             r = requests.get(self.remove_link)
+            self.remove_link = ""
+            self.status = self.WAITING
+            self.save()
             return r.status_code == 200
         return True
 
