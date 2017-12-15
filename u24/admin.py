@@ -5,4 +5,11 @@ from .models import Category, SubCategory, Phone, Advert
 admin.site.register(Category)
 admin.site.register(SubCategory)
 admin.site.register(Phone)
-admin.site.register(Advert)
+
+
+class AdvertAdmin(admin.ModelAdmin):
+    list_display = ('title', 'subcategory', 'status', 'last_post')
+    list_filter = ('subcategory',)
+
+
+admin.site.register(Advert, AdvertAdmin)
