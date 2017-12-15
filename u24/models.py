@@ -128,6 +128,11 @@ class Advert(models.Model):
     def __str__(self):
         return self.title
 
+    def category(self):
+        return self.subcategory.category.title
+
+    category.short_description = 'категория'
+
     def send(self):
         was_error = False
         self.remove()

@@ -8,7 +8,7 @@ admin.site.register(Phone)
 
 
 class AdvertAdmin(admin.ModelAdmin):
-    list_display = ('title', 'subcategory', 'status', 'last_post')
+    list_display = ('title', 'category', 'subcategory', 'status', 'last_post')
     list_filter = ('subcategory',)
 
 
