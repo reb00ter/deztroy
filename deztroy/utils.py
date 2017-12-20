@@ -1,4 +1,4 @@
-from Scripts import unicodedata
+import unicodedata
 
 import pytils as pytils
 from django.core.files.storage import FileSystemStorage
