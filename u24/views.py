@@ -102,10 +102,6 @@ class AdvertDelete(LoginRequiredMixin, DeleteView):
     model = Advert
     success_url = reverse_lazy('index')
 
-    def post(self, request, *args, **kwargs):
-        self.object.remove()
-        return super().post(request, *args, **kwargs)
-
 
 def cron(request):
     for ad in Advert.objects.all():
