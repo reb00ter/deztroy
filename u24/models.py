@@ -48,7 +48,7 @@ class SubCategory(models.Model):
 
 
 class Phone(models.Model):
-    num = NonStrippingCharField(max_length=10, verbose_name="номер", help_text="обязтельно без 8")
+    num = NonStrippingCharField(max_length=50, verbose_name="номер")
 
     def __str__(self):
         return self.num
