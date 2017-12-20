@@ -8,6 +8,7 @@ idna==2.6
 olefile==0.44
 pilkit==2.0
 Pillow==4.3.0
+pytils==0.3
 pytz==2017.3
 requests==2.18.4
 six==1.11.0
