@@ -146,19 +146,19 @@ def stop_all(request):
     for ad in Advert.objects.all():
         ad.interval = 0
         ad.save()
-    return HttpResponseRedirect(Index.as_view())
+    return HttpResponseRedirect("/")
 
 
 def start_all(request):
     for ad in Advert.objects.all():
         ad.interval = 120
         ad.save()
-    return HttpResponseRedirect(Index.as_view())
+    return HttpResponseRedirect("/")
 
 
 def reset_all(request):
     for ad in Advert.objects.all():
         ad.status = ad.WAITING
         ad.save()
-    return HttpResponseRedirect(Index.as_view())
+    return HttpResponseRedirect("/")
 
