@@ -47,7 +47,10 @@
                     <hr style="margin-right: 10px;">
     {% endverbatim %}
                     <a href="{% url "create_ad" %}">Добавить объявление</a><br>
-                    <a href="{% url "cron" %}">Выгрузить</a>
+                    <a href="{% url "cron" %}">Выгрузить</a><br>
+                    <a href="{% url "stop_all" %}">Приостановить все</a><br>
+                    <a href="{% url "start_all" %}">Запустить все</a><br>
+                    <a href="{% url "reset_all" %}">Сбросить все</a>
     {% verbatim %}
                 </div>
                 <div class="small-8">

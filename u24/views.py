@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.db.models.fields.files import ImageFieldFile
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 # Create your views here.
 from django.urls import reverse_lazy
@@ -103,6 +104,21 @@ class AdvertDelete(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('index')
 
 
+def notify_fail(advert: Advert):
+    from django.core.mail import send_mail
+    text = "При отправке объявления %s (рубрика %s) возникла проблема\n\r" \
+           "Не было получено письмо от Ухта24 со ссылкой для подтверждения публикации\r\n" \
+           "Текст объявления:\r\n" \
+           "%s" % (advert.title, advert.subcategory.title, advert.text)
+    send_mail(
+        'Проблема при отправке объявления',
+        text,
+        settings.EMAIL_HOST_USER,
+        [settings.NOTIFY_EMAIL],
+        fail_silently=False,
+    )
+
+
 def cron(request):
     for ad in Advert.objects.all():
         if ad.interval == 0:
@@ -115,6 +131,34 @@ def cron(request):
             dt = timezone.now()-ad.last_post
             if dt > timezone.timedelta(minutes=ad.interval):
                 ad.send()
+        if ad.status == ad.SENT:
+            dt = timezone.now()-ad.status_changed
+            if dt > timezone.timedelta(minutes=ad.interval):
+                notify_fail(ad)
+                ad.status = ad.WAITING
+                ad.send()
     for mailbox in Mailbox.objects.filter(active=True):
         mailbox.get_new_mail()
     return HttpResponse('OK')
+
+
+def stop_all(request):
+    for ad in Advert.objects.all():
+        ad.interval = 0
+        ad.save()
+    return HttpResponseRedirect(Index.as_view())
+
+
+def start_all(request):
+    for ad in Advert.objects.all():
+        ad.interval = 120
+        ad.save()
+    return HttpResponseRedirect(Index.as_view())
+
+
+def reset_all(request):
+    for ad in Advert.objects.all():
+        ad.status = ad.WAITING
+        ad.save()
+    return HttpResponseRedirect(Index.as_view())
+

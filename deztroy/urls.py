@@ -16,11 +16,12 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, reverse_lazy
+from django.urls import path
 from django.contrib.auth import views as auth_views
 
 
-from u24.views import CategoriesJSON, Index, AdsJSON, AdvertCreate, AdvertUpdate, AdvertDelete, cron
+from u24.views import CategoriesJSON, Index, AdsJSON, AdvertCreate, AdvertUpdate, AdvertDelete, cron, start_all, \
+    stop_all, reset_all
 
 urlpatterns = [
     path('', Index.as_view(), name='index'),
@@ -29,6 +30,9 @@ urlpatterns = [
     path('json/categories', CategoriesJSON.as_view(), name='categories_json'),
     path('json/ads', AdsJSON.as_view(), name='ads_json'),
     path('cron', cron, name='cron'),
+    path('stop_all', stop_all, name='stop_all'),
+    path('start_all', start_all, name='start_all'),
+    path('reset_all', reset_all, name='reset_all'),
     path('ad/create', AdvertCreate.as_view(
         extra_context={'title': "Добавить объявление", 'submit': "Добавить"}), name='create_ad'),
     path('ad/<int:pk>/update', AdvertUpdate.as_view(
