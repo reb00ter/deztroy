@@ -148,7 +148,8 @@ class Advert(models.Model):
             ("obtelefon", phone.get_phone().encode('windows-1251')),
             ("obemail", mboxes[0].from_email),
             ("chpunkt", self.subcategory.u24id),
-            ("punkt3", self.subcategory.u24id)
+            ("punkt3", self.subcategory.u24id),
+            ("cena", 0)
         ]
         post_files = []
 

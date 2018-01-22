@@ -1,3 +1,5 @@
+from time import sleep
+
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
@@ -137,6 +139,7 @@ def cron(request):
                 notify_fail(ad)
                 ad.status = ad.WAITING
                 ad.send()
+        sleep(600)
     for mailbox in Mailbox.objects.filter(active=True):
         mailbox.get_new_mail()
     return HttpResponse('OK')
