@@ -2,8 +2,10 @@ import datetime
 import random
 
 import os
+from time import sleep
 
 import requests
+from django.conf import settings
 from django.db import models
 
 # Create your models here.
@@ -134,6 +136,13 @@ class Advert(models.Model):
     category.short_description = 'категория'
 
     def send(self):
+        s = requests.session()
+        s.get("http://uhta24.ru/")
+        sleep(1)
+        s.get("http://uhta24.ru/obyavlenia/")
+        sleep(1)
+        s.get("http://uhta24.ru/obyavlenia/dobavit/")
+        sleep(2)
         was_error = False
         self.remove()
         mboxes = Mailbox.objects.filter(active=True).order_by('?')
@@ -152,7 +161,6 @@ class Advert(models.Model):
             ("cena", 0)
         ]
         post_files = []
-
         def add_thumb_if_not_none(files, field):
             from imagekit.cachefiles import ImageCacheFile
             if field:
@@ -166,9 +174,9 @@ class Advert(models.Model):
         add_thumb_if_not_none(post_files, self.photo2)
         add_thumb_if_not_none(post_files, self.photo3)
         add_thumb_if_not_none(post_files, self.photo4)
-        url = "http://www.uhta24.ru/obyavlenia/dobavit/"
         try:
-            r = requests.post(url, data=post_data, files=post_files)
+            url = "http://www.uhta24.ru/obyavlenia/dobavit/"
+            r = s.post(url, data=post_data, files=post_files, headers=settings.HEADERS)
             self.response_text = r.status_code
             if r.status_code == requests.codes.ok:
                 self.status = self.SENT
@@ -180,6 +188,7 @@ class Advert(models.Model):
             was_error = True
         self.status_changed = datetime.datetime.now()
         self.save()
+        sleep(300)
         return was_error
 
     class Meta:
@@ -188,7 +197,7 @@ class Advert(models.Model):
 
     def remove(self):
         if self.remove_link and self.remove_link != "":
-            r = requests.get(self.remove_link)
+            r = requests.get(self.remove_link, headers=settings.HEADERS)
             self.remove_link = ""
             self.status = self.WAITING
             self.save()
@@ -208,7 +217,7 @@ class Advert(models.Model):
             aproove_start = msg_text.find("http")
             aproove_end = msg_text.find("\r\n\r\n", aproove_start)
             aproove_link = msg_text[aproove_start:aproove_end]
-            r = requests.get(aproove_link)
+            r = requests.get(aproove_link, headers=settings.HEADERS)
             if r.status_code == requests.codes.ok:
                 ad.status = cls.PUBLISHED
                 ad.last_post = datetime.datetime.now()

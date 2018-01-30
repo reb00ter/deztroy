@@ -122,9 +122,9 @@ def notify_fail(advert: Advert):
 
 
 def cron(request):
-    for ad in Advert.objects.all():
-        if ad.interval == 0:
-            continue
+    for mailbox in Mailbox.objects.filter(active=True):
+        mailbox.get_new_mail()
+    for ad in Advert.objects.filter(interval__gt=0):
         if ad.status_changed is None:
             ad.send()
         if ad.status == ad.WAITING:
@@ -139,9 +139,6 @@ def cron(request):
                 notify_fail(ad)
                 ad.status = ad.WAITING
                 ad.send()
-        sleep(600)
-    for mailbox in Mailbox.objects.filter(active=True):
-        mailbox.get_new_mail()
     return HttpResponse('OK')
 
 
