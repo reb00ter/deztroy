@@ -137,12 +137,15 @@ class Advert(models.Model):
 
     def send(self):
         s = requests.session()
-        s.get("http://uhta24.ru/")
-        sleep(1)
-        s.get("http://uhta24.ru/obyavlenia/")
-        sleep(1)
-        s.get("http://uhta24.ru/obyavlenia/dobavit/")
-        sleep(2)
+        s.headers.update(settings.HEADERS)
+        s.cookies.set("_ym_uid", "1503518737371134762")
+        s.cookies.set("_ym_isad", "2")
+        # s.get("http://uhta24.ru/")
+        # sleep(1)
+        # s.get("http://uhta24.ru/obyavlenia/")
+        # sleep(1)
+        # s.get("http://uhta24.ru/obyavlenia/dobavit/")
+        # sleep(2)
         was_error = False
         self.remove()
         mboxes = Mailbox.objects.filter(active=True).order_by('?')
@@ -161,6 +164,7 @@ class Advert(models.Model):
             ("cena", 0)
         ]
         post_files = []
+
         def add_thumb_if_not_none(files, field):
             from imagekit.cachefiles import ImageCacheFile
             if field:
@@ -176,7 +180,7 @@ class Advert(models.Model):
         add_thumb_if_not_none(post_files, self.photo4)
         try:
             url = "http://www.uhta24.ru/obyavlenia/dobavit/"
-            r = s.post(url, data=post_data, files=post_files, headers=settings.HEADERS)
+            r = s.post(url, data=post_data, files=post_files)
             self.response_text = r.status_code
             if r.status_code == requests.codes.ok:
                 self.status = self.SENT
@@ -217,7 +221,11 @@ class Advert(models.Model):
             aproove_start = msg_text.find("http")
             aproove_end = msg_text.find("\r\n\r\n", aproove_start)
             aproove_link = msg_text[aproove_start:aproove_end]
-            r = requests.get(aproove_link, headers=settings.HEADERS)
+            s = requests.session()
+            s.headers.update(settings.HEADERS)
+            s.cookies.set("_ym_uid", "1503518737371134762")
+            s.cookies.set("_ym_isad", "2")
+            r = s.get(aproove_link)
             if r.status_code == requests.codes.ok:
                 ad.status = cls.PUBLISHED
                 ad.last_post = datetime.datetime.now()

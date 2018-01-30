@@ -143,7 +143,8 @@ SERVER_EMAIL = 'an-etalon-plus@yandex.ru'
 
 ADMINS = (('reb00ter', 'reb00ter@uhta.net'),)
 
-HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
+           'Referer': 'http://uhta24.ru/obyavlenia/dobavit/'}
 
 try:
     from .local_settings import *
