@@ -220,10 +220,18 @@ class Advert(models.Model):
             remove_start = 0
             aproove_start = msg_text.find("http")
             aproove_end = msg_text.find("\r\n\r\n", aproove_start)
-            aproove_link = msg_text[aproove_start:aproove_end]
-            import subprocess
-            subprocess.run(["/bin/phantomjs", "/www/u24.js", "\"%s\"" % aproove_link])
-            ad.status = cls.PUBLISHED
+            aproove_link = msg_text[aproove_start:aproove_end].strip()
+            s = requests.session()
+            s.headers.update(settings.HEADERS)
+            s.cookies.set("_ym_uid", "1503518737371134762")
+            s.cookies.set("_ym_isad", "2")
+            r = s.get(aproove_link)
+            if r.status_code == requests.codes.ok:
+                ad.status = cls.PUBLISHED
+                ad.last_post = datetime.datetime.now()
+            else:
+                ad.status = cls.ERROR_APROOVE
+            ad.response_text = r.status_code
             ad.last_post = datetime.datetime.now()
             ad.status_changed = datetime.datetime.now()
             ad.save()
