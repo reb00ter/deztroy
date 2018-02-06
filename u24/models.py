@@ -233,8 +233,7 @@ class Advert(models.Model):
             #     ad.status = cls.ERROR_APROOVE
             # ad.response_text = r.status_code
             import subprocess
-            subprocess.run(["xvfb-run", "--server-args=\"-screen 0, 1024x768x24\"",
-                            "CutyCapt --url=%s --out=pic.png" % aproove_link])
+            subprocess.run(["/bin/phantomjs", "/www/u24.js", aproove_link])
             ad.status = cls.PUBLISHED
             ad.last_post = datetime.datetime.now()
             ad.status_changed = datetime.datetime.now()
