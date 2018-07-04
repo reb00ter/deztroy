@@ -1,7 +1,6 @@
 import datetime
 import random
 
-import os
 from time import sleep
 
 import requests
@@ -10,8 +9,6 @@ from django.db import models
 
 # Create your models here.
 from django.dispatch import receiver
-from django_mailbox.models import Mailbox
-from django_mailbox.signals import message_received
 from imagekit import ImageSpec
 from pilkit.processors import Transpose, ResizeToFill
 from urllib3.exceptions import IncompleteRead
@@ -140,12 +137,6 @@ class Advert(models.Model):
         s.headers.update(settings.HEADERS)
         s.cookies.set("_ym_uid", "1503518737371134762")
         s.cookies.set("_ym_isad", "2")
-        # s.get("http://uhta24.ru/")
-        # sleep(1)
-        # s.get("http://uhta24.ru/obyavlenia/")
-        # sleep(1)
-        # s.get("http://uhta24.ru/obyavlenia/dobavit/")
-        # sleep(2)
         was_error = False
         self.remove()
         mboxes = Mailbox.objects.filter(active=True).order_by('?')
@@ -202,11 +193,30 @@ class Advert(models.Model):
     def remove(self):
         if self.remove_link and self.remove_link != "":
             r = requests.get(self.remove_link, headers=settings.HEADERS)
-            self.remove_link = ""
-            self.status = self.WAITING
-            self.save()
-            return r.status_code == 200
-        return True
+            result = r.status_code == 200
+        else:
+            result = True
+        self.remove_link = ""
+        self.status = self.WAITING
+        self.save()
+        return result
+
+    def aproove(self, links):
+        s = requests.session()
+        s.headers.update(settings.HEADERS)
+        s.cookies.set("_ym_uid", "1503518737371134762")
+        s.cookies.set("_ym_isad", "2")
+        r = s.get(links[0])
+        self.remove_link = links[1]
+        if r.status_code == requests.codes.ok:
+            self.status = self.PUBLISHED
+            self.last_post = datetime.datetime.now()
+        else:
+            self.status = self.ERROR_APROOVE
+        self.response_text = r.status_code
+        self.last_post = datetime.datetime.now()
+        self.status_changed = datetime.datetime.now()
+        self.save()
 
     @classmethod
     def fill_ad_by_message(cls, msg_text):
@@ -246,13 +256,27 @@ class Advert(models.Model):
                 return False
 
 
-@receiver(message_received)
-def process_mail(sender, message, **args):
-    try:
-        from_header = message.from_header
-    except:
-        return
-    if (from_header != 'noreply@uhta24.ru') and (from_header != 'Uhta24 <noreply@uhta24.ru>'):
-        return
-    if Advert.fill_ad_by_message(message.text):
-        message.delete()
+class Mailbox(models.Model):
+    server = models.CharField(verbose_name="IMAP сервер", max_length=128)
+    login = models.CharField(verbose_name="логин", max_length=128)
+    password = models.CharField(verbose_name="пароль", max_length=128)
+    active = models.BooleanField(verbose_name="включен", default=True)
+
+    def __str__(self):
+        return "%s@%s" % (self.login, self.server)
+
+    class Meta:
+        verbose_name = "почтовый ящик"
+        verbose_name_plural = "почтовые ящики"
+
+
+# @receiver(message_received)
+# def process_mail(sender, message, **args):
+#     try:
+#         from_header = message.from_header
+#     except:
+#         return
+#     if (from_header != 'noreply@uhta24.ru') and (from_header != 'Uhta24 <noreply@uhta24.ru>'):
+#         return
+#     if Advert.fill_ad_by_message(message.text):
+#         message.delete()

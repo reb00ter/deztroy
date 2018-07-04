@@ -21,7 +21,7 @@ from django.contrib.auth import views as auth_views
 
 
 from u24.views import CategoriesJSON, Index, AdsJSON, AdvertCreate, AdvertUpdate, AdvertDelete, cron, start_all, \
-    stop_all, reset_all
+    stop_all, reset_all, push_now
 
 urlpatterns = [
     path('', Index.as_view(), name='index'),
@@ -33,6 +33,7 @@ urlpatterns = [
     path('stop_all', stop_all, name='stop_all'),
     path('start_all', start_all, name='start_all'),
     path('reset_all', reset_all, name='reset_all'),
+    path('push_now', push_now, name='push_now'),
     path('ad/create', AdvertCreate.as_view(
         extra_context={'title': "Добавить объявление", 'submit': "Добавить"}), name='create_ad'),
     path('ad/<int:pk>/update', AdvertUpdate.as_view(

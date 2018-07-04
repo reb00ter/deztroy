@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Category, SubCategory, Phone, Advert
+from .models import Category, SubCategory, Phone, Advert, Mailbox
 
 # Register your models here.
+admin.site.register(Mailbox)
 admin.site.register(Category)
 admin.site.register(SubCategory)
 admin.site.register(Phone)

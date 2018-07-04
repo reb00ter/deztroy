@@ -10,10 +10,10 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import TemplateView, CreateView, UpdateView, DeleteView
-from django_mailbox.models import Mailbox
 
 from deztroy.mixins import JSONResponseMixin
-from u24.models import Category, Advert, PreviewThumbnail
+from mail_checker.mailer import get_links
+from u24.models import Mailbox, Category, Advert, PreviewThumbnail
 
 
 class Index(LoginRequiredMixin, TemplateView):
@@ -122,8 +122,6 @@ def notify_fail(advert: Advert):
 
 
 def cron(request):
-    for mailbox in Mailbox.objects.filter(active=True):
-        mailbox.get_new_mail()
     for ad in Advert.objects.filter(interval__gt=0):
         if ad.status_changed is None:
             ad.send()
@@ -134,11 +132,19 @@ def cron(request):
             if dt > timezone.timedelta(minutes=ad.interval):
                 ad.send()
         if ad.status == ad.SENT:
-            dt = timezone.now()-ad.status_changed
-            if dt > timezone.timedelta(minutes=ad.interval):
-                notify_fail(ad)
-                ad.status = ad.WAITING
-                ad.send()
+            find = False
+            for box in Mailbox.objects.filter(active=True):
+                links = get_links(box.server, box.login, box.password, ad.text)
+                if links:
+                    ad.aproove(links)
+                    find = True
+                    break
+            if not find:
+                dt = timezone.now()-ad.status_changed
+                if dt > timezone.timedelta(minutes=ad.interval):
+                    notify_fail(ad)
+                    ad.status = ad.WAITING
+                    ad.send()
     return HttpResponse('OK')
 
 
@@ -158,7 +164,12 @@ def start_all(request):
 
 def reset_all(request):
     for ad in Advert.objects.all():
-        ad.status = ad.WAITING
-        ad.save()
+        ad.remove()
     return HttpResponseRedirect("/")
 
+
+def push_now(request):
+    for ad in Advert.objects.filter(interval__gt=0):
+        ad.remove()
+        ad.send()
+    return HttpResponseRedirect("/")
