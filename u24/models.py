@@ -257,13 +257,14 @@ class Advert(models.Model):
 
 
 class Mailbox(models.Model):
+    from_email = models.CharField(verbose_name="адрес", max_length=128)
     server = models.CharField(verbose_name="IMAP сервер", max_length=128)
     login = models.CharField(verbose_name="логин", max_length=128)
     password = models.CharField(verbose_name="пароль", max_length=128)
     active = models.BooleanField(verbose_name="включен", default=True)
 
     def __str__(self):
-        return "%s@%s" % (self.login, self.server)
+        return "%s" % self.from_email
 
     class Meta:
         verbose_name = "почтовый ящик"
