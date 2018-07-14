@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from deztroy.utils import getLogger
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -145,6 +147,8 @@ ADMINS = (('reb00ter', 'reb00ter@uhta.net'),)
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
            'Referer': 'http://uhta24.ru/obyavlenia/dobavit/'}
+
+LOGGER = getLogger()
 
 try:
     from .local_settings import *

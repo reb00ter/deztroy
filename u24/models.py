@@ -8,7 +8,6 @@ from django.conf import settings
 from django.db import models
 
 # Create your models here.
-from django.dispatch import receiver
 from imagekit import ImageSpec
 from pilkit.processors import Transpose, ResizeToFill
 from urllib3.exceptions import IncompleteRead
@@ -173,6 +172,8 @@ class Advert(models.Model):
             url = "http://www.uhta24.ru/obyavlenia/dobavit/"
             r = s.post(url, data=post_data, files=post_files)
             self.response_text = r.status_code
+            settings.LOGGER.info("Отправлено объявление %s в рубрику %s. Ответ сервера: %s" %
+                                 (self.text, self.subcategory.title, r.status_code))
             if r.status_code == requests.codes.ok:
                 self.status = self.SENT
             else:
@@ -193,8 +194,12 @@ class Advert(models.Model):
     def remove(self):
         if self.remove_link and self.remove_link != "":
             r = requests.get(self.remove_link, headers=settings.HEADERS)
+            settings.LOGGER.info("Удалено объявление %s из рубрики %s. Ответ сервера: %s" %
+                                 (self.text, self.subcategory.title, r.status_code))
             result = r.status_code == 200
         else:
+            settings.LOGGER.info("Запрос на удаление объявления %s из рубрики %s. Удаление не требуется. "
+                                 "Объявление не опубликовано" % (self.text, self.subcategory.title))
             result = True
         self.remove_link = ""
         self.status = self.WAITING
@@ -214,6 +219,8 @@ class Advert(models.Model):
         else:
             self.status = self.ERROR_APROOVE
         self.response_text = r.status_code
+        settings.LOGGER.info("Подтверждено объявление %s из рубрики %s. Ответ сервера: %s" %
+                             (self.text, self.subcategory.title, r.status_code))
         self.last_post = datetime.datetime.now()
         self.status_changed = datetime.datetime.now()
         self.save()
@@ -270,14 +277,3 @@ class Mailbox(models.Model):
         verbose_name = "почтовый ящик"
         verbose_name_plural = "почтовые ящики"
 
-
-# @receiver(message_received)
-# def process_mail(sender, message, **args):
-#     try:
-#         from_header = message.from_header
-#     except:
-#         return
-#     if (from_header != 'noreply@uhta24.ru') and (from_header != 'Uhta24 <noreply@uhta24.ru>'):
-#         return
-#     if Advert.fill_ad_by_message(message.text):
-#         message.delete()
