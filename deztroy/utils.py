@@ -19,7 +19,7 @@ class ASCIIFileSystemStorage(FileSystemStorage):
         return super(ASCIIFileSystemStorage, self).get_valid_name(name)
 
 
-def getLogger(loglevel=logging.INFO):
+def get_logger(loglevel=logging.INFO):
     logger = logging.getLogger('MessageWorker')
     logger.setLevel(loglevel)
     fp = TimedRotatingFileHandler(os.path.dirname(os.path.realpath(__file__)) +
