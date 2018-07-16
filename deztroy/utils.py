@@ -23,7 +23,7 @@ def get_logger(loglevel=logging.INFO):
     logger = logging.getLogger('MessageWorker')
     logger.setLevel(loglevel)
     fp = TimedRotatingFileHandler(os.path.dirname(os.path.realpath(__file__)) +
-                                  '/../media/log', when='H', interval=24,
+                                  '/../media/log', when='D', interval=2,
                                   backupCount=7)
     fp.setLevel(loglevel)
     formatter = logging.Formatter('%(asctime)s: [%(levelname)s] %(message)s')
