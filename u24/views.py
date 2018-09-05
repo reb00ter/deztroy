@@ -122,7 +122,9 @@ def notify_fail(advert: Advert):
 
 
 def cron(request):
-    settings.LOGGER.info("Cron touched")
+    from uuid import uuid4
+    id = uuid4()
+    settings.LOGGER.info("Cron %s touched" % id)
     for ad in Advert.objects.filter(interval__gt=0):
         ad.refresh_from_db()
         if ad.status_changed is None:
@@ -150,6 +152,7 @@ def cron(request):
                     notify_fail(ad)
                     ad.remove()
                     ad.send()
+    settings.LOGGER.info("Cron %s finished" % id)
     return HttpResponse('OK')
 
 
