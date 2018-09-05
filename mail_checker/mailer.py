@@ -78,7 +78,7 @@ class Mailer:
                 settings.LOGGER.info("Find links %s %s" % result)
                 self.mail.store(uid, '+FLAGS', '\\Deleted')
                 self.mail.expunge()
-                settings.LOGGER.info("Deleting message")
+                settings.LOGGER.info("Deleting message %s" % uid)
                 break
         return result
 

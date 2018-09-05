@@ -141,6 +141,7 @@ def cron(request):
         if ad.status == ad.SENT:
             find = False
             for box in Mailbox.objects.filter(active=True):
+                settings.LOGGER.info("Checking links for %s in box %s" % (ad.id, box.login))
                 links = get_links(box.server, box.login, box.password, ad.text)
                 if links:
                     ad.aproove(links)
