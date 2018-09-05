@@ -93,12 +93,12 @@ class PreviewThumbnail(ImageSpec):
 
 
 class Advert(models.Model):
-    WAITING = 'WT'
-    SENT = 'ST'
-    PUBLISHED = 'PU'
-    REMOVED = 'RM'
-    ERROR = 'ER'
-    ERROR_APROOVE = 'EA'
+    WAITING = 'WT'   # ожидает отправки
+    SENT = 'ST'      # отправлено
+    PUBLISHED = 'PU' # опубликовано
+    REMOVED = 'RM'   # удалено
+    ERROR = 'ER'     # ошибка при отправке
+    ERROR_APROOVE = 'EA'  # ошибка при подтверждении
     STATUS_CHOICES = (
         (WAITING, 'Ожидает'),
         (SENT, 'Отправлено'),
@@ -161,7 +161,6 @@ class Advert(models.Model):
                 image_generator = U24Thumbnail(source=field.file)
                 file = ImageCacheFile(image_generator)
                 file.generate()
-                print(file.path)
                 files.append(("userfile[]", open(file.path, 'rb')))
 
         add_thumb_if_not_none(post_files, self.photo1)
@@ -218,8 +217,8 @@ class Advert(models.Model):
         else:
             self.status = self.ERROR_APROOVE
         self.response_text = r.status_code
-        settings.LOGGER.info("Id %s Approoved. Response: %s" %
-                             (self.id, r.status_code))
+        settings.LOGGER.info("Id %s Approoved. URL was: %s" %
+                             (self.id, links[0]))
         self.last_post = datetime.datetime.now()
         self.status_changed = datetime.datetime.now()
         self.save()

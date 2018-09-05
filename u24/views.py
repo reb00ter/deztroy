@@ -123,14 +123,18 @@ def notify_fail(advert: Advert):
 
 def cron(request):
     for ad in Advert.objects.filter(interval__gt=0):
+        ad.refresh_from_db()
         if ad.status_changed is None:
             ad.send()
+            continue
         if ad.status == ad.WAITING:
             ad.send()
+            continue
         if ad.last_post is not None and (ad.status != ad.SENT):
             dt = timezone.now()-ad.last_post
             if dt > timezone.timedelta(minutes=ad.interval):
                 ad.send()
+                continue
         if ad.status == ad.SENT:
             find = False
             for box in Mailbox.objects.filter(active=True):
@@ -143,7 +147,7 @@ def cron(request):
                 dt = timezone.now()-ad.status_changed
                 if dt > timezone.timedelta(minutes=ad.interval):
                     notify_fail(ad)
-                    ad.status = ad.WAITING
+                    ad.remove()
                     ad.send()
     return HttpResponse('OK')
 

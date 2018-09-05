@@ -1,6 +1,8 @@
 import imaplib
 import re
 
+from django.conf import settings
+
 
 def get_first_text_block(email_message_instance):
     maintype = email_message_instance.get_content_maintype()
@@ -62,19 +64,21 @@ class Mailer:
             if data is None:
                 return None
             if data[0] is None:
-                print("Next")
                 continue
             raw_email = data[0][1]
             import email
             email_message = email.message_from_bytes(raw_email)
+            settings.LOGGER.info("Checking message %s" % uid)
             content = get_first_text_block(email_message)
             if content.find(pattern) != -1:
                 result = re.findall(r'http.*\b', content)
                 if len(result) != 2:
                     continue
                 result = result[0], result[1]
+                settings.LOGGER.info("Find links %s %s" % result)
                 self.mail.store(uid, '+FLAGS', '\\Deleted')
                 self.mail.expunge()
+                settings.LOGGER.info("Deleting message")
                 break
         return result
 
