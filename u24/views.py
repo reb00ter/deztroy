@@ -122,6 +122,7 @@ def notify_fail(advert: Advert):
 
 
 def cron(request):
+    settings.LOGGER.info("Cron touched")
     for ad in Advert.objects.filter(interval__gt=0):
         ad.refresh_from_db()
         if ad.status_changed is None:
