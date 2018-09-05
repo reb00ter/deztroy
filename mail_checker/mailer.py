@@ -30,6 +30,7 @@ class Mailer:
         :param password:
         :return: список папок на сервере
         """
+        settings.LOGGER.info("Logging in mail server. Login %s" % login)
         self.mail = imaplib.IMAP4_SSL(url, 993)
         self.mail.login(login, password)
         return self.mail.list()
@@ -83,6 +84,8 @@ class Mailer:
         return result
 
     def logout(self):
+        settings.LOGGER.info("Logging out of mail server")
+        self.mail.close()
         self.mail.logout()
 
 
