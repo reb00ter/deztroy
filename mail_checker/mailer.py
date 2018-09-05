@@ -2,6 +2,7 @@ import imaplib
 import re
 
 from django.conf import settings
+from pytils import translit
 
 
 def get_first_text_block(email_message_instance):
@@ -72,6 +73,7 @@ class Mailer:
             settings.LOGGER.info("Checking message %s" % uid)
             content = get_first_text_block(email_message)
             if content.find(pattern) != -1:
+                settings.LOGGER.info("PATTERN %s FOUND" % translit.translify(pattern))
                 result = re.findall(r'http.*\b', content)
                 if len(result) != 2:
                     continue
