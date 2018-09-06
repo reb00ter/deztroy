@@ -90,6 +90,7 @@ class Mailer:
         try:
             self.mail.close()
             self.mail.logout()
+            settings.LOGGER.info("Logged out")
         except:
             settings.LOGGER.error()
 
@@ -99,4 +100,5 @@ def get_links(server, login, password, pattern):
     m.connect(server, login, password)
     result = m.get_links(pattern)
     m.logout()
+    settings.LOGGER.info("get_links done")
     return result
