@@ -127,22 +127,28 @@ def send():
     from uuid import uuid4
     id = uuid4()
     settings.LOGGER.info("Cron %s touched. Sending" % id)
+    was_action = False
     try:
         with Lock(name="send_lock"):
             for ad in Advert.objects.filter(interval__gt=0):
-                settings.LOGGER.info("Cron %s. Checking ad %s. Sleeping now" % (id, ad.id))
-                sleep(150)
+                settings.LOGGER.info("Cron %s. Checking ad %s" % (id, ad.id))
+                if was_action:
+                    sleep(150)
+                    was_action = False
                 ad.refresh_from_db()
                 if ad.status_changed is None:
                     ad.send(id)
+                    was_action = True
                     continue
                 if ad.status == ad.WAITING:
                     ad.send(id)
+                    was_action = True
                     continue
                 if ad.last_post is not None and (ad.status != ad.SENT):
                     dt = timezone.now()-ad.last_post
                     if dt > timezone.timedelta(minutes=ad.interval):
                         ad.send(id)
+                        was_action = True
                         continue
     except CannotAcquireLock:
         settings.LOGGER.info("Cron %s. Another cron working. Exiting")
