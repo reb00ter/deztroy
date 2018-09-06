@@ -159,7 +159,7 @@ def approove():
                 for box in Mailbox.objects.filter(active=True):
                     settings.LOGGER.info("Cron %s. Checking links for %s in box %s" % (id, ad.id, box.login))
                     links = get_links(box.server, box.login, box.password, ad.text)
-                    if links:
+                    if links is not None:
                         ad.aproove(links)
                         find = True
                 settings.LOGGER.info("Cron %s. Checking links for %s complete" % (id, ad.id))
