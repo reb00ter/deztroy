@@ -151,7 +151,7 @@ def send():
                         was_action = True
                         continue
     except CannotAcquireLock:
-        settings.LOGGER.info("Cron %s. Another cron working. Exiting")
+        settings.LOGGER.info("Cron %s. Another sending cron working. Exiting" % id)
     settings.LOGGER.info("Cron %s finished" % id)
 
 
@@ -177,7 +177,7 @@ def approove():
                         notify_fail(ad)
                         ad.remove(id)
     except CannotAcquireLock:
-        settings.LOGGER.info("Cron %s. Another cron working. Exiting" % id)
+        settings.LOGGER.info("Cron %s. Another approoving cron working. Exiting" % id)
     settings.LOGGER.info("Cron %s finished" % id)
 
 
