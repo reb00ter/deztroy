@@ -131,7 +131,7 @@ class Advert(models.Model):
 
     category.short_description = 'категория'
 
-    def send(self):
+    def send(self, cron_id=""):
         s = requests.session()
         s.headers.update(settings.HEADERS)
         s.cookies.set("_ym_uid", "1503518737371134762")
@@ -171,8 +171,8 @@ class Advert(models.Model):
             url = "http://www.uhta24.ru/obyavlenia/dobavit/"
             r = s.post(url, data=post_data, files=post_files)
             self.response_text = r.status_code
-            settings.LOGGER.info("ID %s sent. Response: %s" %
-                                 (self.id, r.status_code))
+            settings.LOGGER.info("Cron %s. ID %s sent. Response: %s" %
+                                 (cron_id, self.id, r.status_code))
             if r.status_code == requests.codes.ok:
                 self.status = self.SENT
             else:
@@ -183,21 +183,20 @@ class Advert(models.Model):
             was_error = True
         self.status_changed = datetime.datetime.now()
         self.save()
-        sleep(300)
         return was_error
 
     class Meta:
         verbose_name = "объявление"
         verbose_name_plural = "объявления"
 
-    def remove(self):
+    def remove(self, cron_id=""):
         if self.remove_link and self.remove_link != "":
             r = requests.get(self.remove_link, headers=settings.HEADERS)
             settings.LOGGER.info("ID %s Removed from u24. Response: %s" %
                                  (self.id, r.status_code))
             result = r.status_code == 200
         else:
-            settings.LOGGER.info("Deleting request for id %s. Don`t needed - not posted " % self.id)
+            settings.LOGGER.info("Cron %s. Deleting request for id %s. Don`t needed - not posted " % (cron_id, self.id))
             result = True
         self.remove_link = ""
         self.status = self.WAITING
