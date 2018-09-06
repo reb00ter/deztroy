@@ -162,7 +162,6 @@ def approove():
                     if links:
                         ad.aproove(links)
                         find = True
-                        break
                 if not find:
                     dt = timezone.now() - ad.status_changed
                     if dt > timezone.timedelta(minutes=ad.interval):
