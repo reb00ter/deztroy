@@ -87,8 +87,11 @@ class Mailer:
 
     def logout(self):
         settings.LOGGER.info("Logging out of mail server")
-        self.mail.close()
-        self.mail.logout()
+        try:
+            self.mail.close()
+            self.mail.logout()
+        except:
+            settings.LOGGER.error()
 
 
 def get_links(server, login, password, pattern):

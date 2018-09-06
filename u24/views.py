@@ -163,6 +163,7 @@ def approove():
                         ad.aproove(links)
                         find = True
                 if not find:
+                    settings.LOGGER.warn("Cron %s. Did not find links for %s" % (id, ad.id))
                     dt = timezone.now() - ad.status_changed
                     if dt > timezone.timedelta(minutes=ad.interval):
                         notify_fail(ad)
