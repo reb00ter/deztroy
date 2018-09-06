@@ -130,6 +130,7 @@ def send():
     try:
         with Lock(name="send_lock"):
             for ad in Advert.objects.filter(interval__gt=0):
+                settings.LOGGER.info("Cron %s. Checking ad %s. Sleeping now" % (id, ad.id))
                 sleep(150)
                 ad.refresh_from_db()
                 if ad.status_changed is None:
@@ -170,7 +171,7 @@ def approove():
                         notify_fail(ad)
                         ad.remove(id)
     except CannotAcquireLock:
-        settings.LOGGER.info("Cron %s. Another cron working. Exiting")
+        settings.LOGGER.info("Cron %s. Another cron working. Exiting" % id)
     settings.LOGGER.info("Cron %s finished" % id)
 
 
