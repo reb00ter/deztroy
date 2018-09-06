@@ -15,6 +15,8 @@ from deztroy.mixins import JSONResponseMixin
 from mail_checker.mailer import get_links
 from u24.models import Mailbox, Category, Advert, PreviewThumbnail
 
+from exclusiveprocess import Lock, CannotAcquireLock
+
 
 class Index(LoginRequiredMixin, TemplateView):
     template_name = "index.html"
@@ -125,20 +127,24 @@ def send():
     from uuid import uuid4
     id = uuid4()
     settings.LOGGER.info("Cron %s touched. Sending" % id)
-    for ad in Advert.objects.filter(interval__gt=0):
-        sleep(150)
-        ad.refresh_from_db()
-        if ad.status_changed is None:
-            ad.send(id)
-            continue
-        if ad.status == ad.WAITING:
-            ad.send(id)
-            continue
-        if ad.last_post is not None and (ad.status != ad.SENT):
-            dt = timezone.now()-ad.last_post
-            if dt > timezone.timedelta(minutes=ad.interval):
-                ad.send(id)
-                continue
+    try:
+        with Lock(name="send_lock"):
+            for ad in Advert.objects.filter(interval__gt=0):
+                sleep(150)
+                ad.refresh_from_db()
+                if ad.status_changed is None:
+                    ad.send(id)
+                    continue
+                if ad.status == ad.WAITING:
+                    ad.send(id)
+                    continue
+                if ad.last_post is not None and (ad.status != ad.SENT):
+                    dt = timezone.now()-ad.last_post
+                    if dt > timezone.timedelta(minutes=ad.interval):
+                        ad.send(id)
+                        continue
+    except CannotAcquireLock:
+        settings.LOGGER.info("Cron %s. Another cron working. Exiting")
     settings.LOGGER.info("Cron %s finished" % id)
 
 
@@ -146,21 +152,26 @@ def approove():
     from uuid import uuid4
     id = uuid4()
     settings.LOGGER.info("Cron %s touched. Approoving" % id)
-    for ad in Advert.objects.filter(interval__gt=0).filter(status=Advert.SENT):
-        find = False
-        for box in Mailbox.objects.filter(active=True):
-            settings.LOGGER.info("Cron %s. Checking links for %s in box %s" % (id, ad.id, box.login))
-            links = get_links(box.server, box.login, box.password, ad.text)
-            if links:
-                ad.aproove(links)
-                find = True
-                break
-        if not find:
-            dt = timezone.now() - ad.status_changed
-            if dt > timezone.timedelta(minutes=ad.interval):
-                notify_fail(ad)
-                ad.remove(id)
+    try:
+        with Lock(name="approove_lock"):
+            for ad in Advert.objects.filter(interval__gt=0).filter(status=Advert.SENT):
+                find = False
+                for box in Mailbox.objects.filter(active=True):
+                    settings.LOGGER.info("Cron %s. Checking links for %s in box %s" % (id, ad.id, box.login))
+                    links = get_links(box.server, box.login, box.password, ad.text)
+                    if links:
+                        ad.aproove(links)
+                        find = True
+                        break
+                if not find:
+                    dt = timezone.now() - ad.status_changed
+                    if dt > timezone.timedelta(minutes=ad.interval):
+                        notify_fail(ad)
+                        ad.remove(id)
+    except CannotAcquireLock:
+        settings.LOGGER.info("Cron %s. Another cron working. Exiting")
     settings.LOGGER.info("Cron %s finished" % id)
+
 
 def cron(request):
     send()

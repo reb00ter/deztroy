@@ -3,7 +3,6 @@ chardet==3.0.4
 Django==2.0
 django-appconf==1.0.2
 django-imagekit==4.0.2
-django-mailbox==4.6.0
 idna==2.6
 olefile==0.44
 pilkit==2.0
@@ -13,3 +12,4 @@ pytz==2017.3
 requests==2.18.4
 six==1.11.0
 urllib3==1.22
+exclusiveprocess==0.9.4
