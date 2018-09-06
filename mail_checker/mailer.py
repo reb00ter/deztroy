@@ -72,6 +72,7 @@ class Mailer:
             email_message = email.message_from_bytes(raw_email)
             settings.LOGGER.info("Checking message %s" % uid)
             content = get_first_text_block(email_message)
+            result = None
             if content.find(pattern) != -1:
                 settings.LOGGER.info("PATTERN %s FOUND" % translit.translify(pattern))
                 result = re.findall(r'http.*\b', content)
