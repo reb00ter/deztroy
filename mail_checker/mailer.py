@@ -57,12 +57,13 @@ class Mailer:
         self.select('INBOX')
         if self.mail is None:
             raise Exception(self.NeedConnectionMessage)
-        result, data = self.mail.search(None, 'FROM uhta24.ru')
+        tmp_result, data = self.mail.search(None, 'FROM uhta24.ru')
         ids = data[0]
-        id_list = ids.split()
         result = None
+        settings.LOGGER.info("Got mail ids %s." % ids)
+        id_list = ids.split()
         for uid in id_list:
-            result, data = self.mail.fetch(uid, '(RFC822)')
+            tmp_result, data = self.mail.fetch(uid, '(RFC822)')
             if data is None:
                 return None
             if data[0] is None:
@@ -72,7 +73,6 @@ class Mailer:
             email_message = email.message_from_bytes(raw_email)
             settings.LOGGER.info("Checking message %s" % uid)
             content = get_first_text_block(email_message)
-            result = None
             if content.find(pattern) != -1:
                 settings.LOGGER.info("PATTERN %s FOUND" % translit.translify(pattern))
                 result = re.findall(r'http.*\b', content)
