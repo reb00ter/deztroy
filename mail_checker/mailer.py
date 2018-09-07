@@ -47,7 +47,7 @@ class Mailer:
             return []
         folders = self.mail.list()
         if folders is not None:
-            settings.LOGGER.info("Discovered folders: %s" % folders)
+            settings.LOGGER.info("Discovered folders: %s" % ', '.join(folders))
         else:
             settings.LOGGER.warn("No folders available no server")
             return []
