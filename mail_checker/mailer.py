@@ -32,10 +32,25 @@ class Mailer:
         :return: список папок на сервере
         """
         settings.LOGGER.info("Logging in mail server. Login %s" % login)
-        self.mail = imaplib.IMAP4_SSL(url, 993)
-        self.mail.login(login, password)
-        settings.LOGGER.info("Successfully logged in.")
-        return self.mail.list()
+        try:
+            self.mail = imaplib.IMAP4_SSL(url, 993)
+            settings.LOGGER.info("Successfully connected")
+        except:
+            settings.LOGGER.error("Can`t connect to mail server")
+            return []
+        try:
+            self.mail.login(login, password)
+            settings.LOGGER.info("Successfully logged in.")
+        except:
+            settings.LOGGER.error("Auth error")
+            return []
+        folders = self.mail.list()
+        if folders is not None:
+            settings.LOGGER.info("Discovered folders: %s" % folders.join(', '))
+        else:
+            settings.LOGGER.warn("No folders available no server")
+            return []
+        return folders
 
     def select(self, folder):
         """
@@ -64,6 +79,7 @@ class Mailer:
         settings.LOGGER.info("Got mail ids %s." % ids)
         id_list = ids.split()
         for uid in id_list:
+            settings.LOGGER.info("Checking message %s" % uid)
             tmp_result, data = self.mail.fetch(uid, '(RFC822)')
             if data is None:
                 return None
@@ -71,8 +87,8 @@ class Mailer:
                 continue
             raw_email = data[0][1]
             import email
+            settings.LOGGER.info("Parsing message %s" % uid)
             email_message = email.message_from_bytes(raw_email)
-            settings.LOGGER.info("Checking message %s" % uid)
             content = get_first_text_block(email_message)
             if content.find(pattern) != -1:
                 settings.LOGGER.info("PATTERN %s FOUND" % translit.translify(pattern))
@@ -100,8 +116,11 @@ class Mailer:
 def get_links(server, login, password, pattern):
     try:
         m = Mailer()
-        m.connect(server, login, password)
-        result = m.get_links(pattern)
+        folders = m.connect(server, login, password)
+        if 'INBOX' in folders:
+            result = m.get_links(pattern)
+        else:
+            result = None
         m.logout()
         settings.LOGGER.info("get_links done")
         return result
