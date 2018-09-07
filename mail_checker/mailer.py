@@ -47,11 +47,6 @@ class Mailer:
             settings.LOGGER.error("Auth error")
             return []
         folders = self.mail.list()
-        if folders is not None:
-            settings.LOGGER.info("Discovered folders: %s" % json.dumps(folders))
-        else:
-            settings.LOGGER.warn("No folders available no server")
-            return []
         return folders
 
     def select(self, folder):
@@ -119,11 +114,8 @@ class Mailer:
 def get_links(server, login, password, pattern):
     try:
         m = Mailer()
-        folders = m.connect(server, login, password)
-        if 'INBOX' in folders:
-            result = m.get_links(pattern)
-        else:
-            result = None
+        m.connect(server, login, password)
+        result = m.get_links(pattern)
         m.logout()
         settings.LOGGER.info("get_links done")
         return result
