@@ -34,6 +34,7 @@ class Mailer:
         settings.LOGGER.info("Logging in mail server. Login %s" % login)
         self.mail = imaplib.IMAP4_SSL(url, 993)
         self.mail.login(login, password)
+        settings.LOGGER.info("Successfully logged in.")
         return self.mail.list()
 
     def select(self, folder):
@@ -97,9 +98,13 @@ class Mailer:
 
 
 def get_links(server, login, password, pattern):
-    m = Mailer()
-    m.connect(server, login, password)
-    result = m.get_links(pattern)
-    m.logout()
-    settings.LOGGER.info("get_links done")
-    return result
+    try:
+        m = Mailer()
+        m.connect(server, login, password)
+        result = m.get_links(pattern)
+        m.logout()
+        settings.LOGGER.info("get_links done")
+        return result
+    except:
+        settings.LOGGER.exception("get links failed")
+        return None
