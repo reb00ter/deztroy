@@ -1,5 +1,6 @@
 import imaplib
 import re
+from time import sleep
 
 from django.conf import settings
 from pytils import translit
@@ -108,6 +109,7 @@ class Mailer:
         try:
             self.mail.close()
             self.mail.logout()
+            sleep(5)
             settings.LOGGER.info("Logged out")
         except:
             settings.LOGGER.error()
