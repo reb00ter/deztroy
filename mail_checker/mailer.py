@@ -35,16 +35,15 @@ class Mailer:
         """
         import socket
         settings.LOGGER.info("Logging in mail server. Login %s" % login)
+        tmp = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(10)
         try:
-            tmp = socket.getdefaulttimeout()
-            socket.setdefaulttimeout(10)
             self.mail = imaplib.IMAP4_SSL(url, 993)
             settings.LOGGER.info("Successfully connected")
         except:
             settings.LOGGER.error("Can`t connect to mail server")
             self.mail = None
-        finally:
-            socket.setdefaulttimeout(tmp)
+        socket.setdefaulttimeout(tmp)
         if self.mail is None:
             return []
         try:
