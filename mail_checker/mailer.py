@@ -33,12 +33,19 @@ class Mailer:
         :param password:
         :return: список папок на сервере
         """
+        import socket
         settings.LOGGER.info("Logging in mail server. Login %s" % login)
         try:
+            tmp = socket.getdefaulttimeout()
+            socket.setdefaulttimeout(10)
             self.mail = imaplib.IMAP4_SSL(url, 993)
             settings.LOGGER.info("Successfully connected")
         except:
             settings.LOGGER.error("Can`t connect to mail server")
+            self.mail = None
+        finally:
+            socket.setdefaulttimeout(tmp)
+        if self.mail is None:
             return []
         try:
             self.mail.login(login, password)
