@@ -76,7 +76,7 @@ class Mailer:
         self.select('INBOX')
         if self.mail is None:
             raise Exception(self.NeedConnectionMessage)
-        tmp_result, data = self.mail.search(None, '(FROM "uhta24.ru")')
+        tmp_result, data = self.mail.search(None, 'ALL')
         ids = data[0]
         result = None
         settings.LOGGER.info("Got mail ids %s." % ids)
