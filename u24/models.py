@@ -1,4 +1,5 @@
 import datetime
+import os
 import random
 
 from time import sleep
@@ -93,11 +94,11 @@ class PreviewThumbnail(ImageSpec):
 
 
 class Advert(models.Model):
-    WAITING = 'WT'   # ожидает отправки
-    SENT = 'ST'      # отправлено
-    PUBLISHED = 'PU' # опубликовано
-    REMOVED = 'RM'   # удалено
-    ERROR = 'ER'     # ошибка при отправке
+    WAITING = 'WT'    # ожидает отправки
+    SENT = 'ST'       # отправлено
+    PUBLISHED = 'PU'  # опубликовано
+    REMOVED = 'RM'    # удалено
+    ERROR = 'ER'      # ошибка при отправке
     ERROR_APROOVE = 'EA'  # ошибка при подтверждении
     STATUS_CHOICES = (
         (WAITING, 'Ожидает'),
@@ -109,7 +110,7 @@ class Advert(models.Model):
     )
     title = models.CharField(verbose_name="название", max_length=255, help_text="чтобы не запутаться")
     subcategory = models.ForeignKey(SubCategory, verbose_name="подкатегория", on_delete=models.CASCADE)
-    text = models.TextField(verbose_name="текст")
+    text = models.TextField(verbose_name="текст", max_length=350)
     photo1 = models.ImageField(verbose_name="Фото1", null=True, blank=True)
     photo2 = models.ImageField(verbose_name="Фото2", null=True, blank=True)
     photo3 = models.ImageField(verbose_name="Фото3", null=True, blank=True)
@@ -144,15 +145,14 @@ class Advert(models.Model):
             available_phones = Phone.objects.all()
         assert available_phones.count() > 0
         phone = available_phones.order_by('?').first()
-        post_data = [
-            ("chpodrazdel", self.subcategory.category.u24id),
-            ("obtext", self.text.encode('windows-1251')),
-            ("obtelefon", phone.get_phone().encode('windows-1251')),
-            ("obemail", mboxes[0].from_email),
-            ("chpunkt", self.subcategory.u24id),
-            ("punkt3", self.subcategory.u24id),
-            ("cena", 0)
-        ]
+        post_data = {
+            'chpodrazdel': self.subcategory.category.u24id,
+            'obtext': self.text,
+            'obtelefon': phone.get_phone(),
+            'obemail': mboxes[0].from_email,
+            'chpunkt': self.subcategory.u24id,
+            'cena': 0,
+        }
         post_files = []
 
         def add_thumb_if_not_none(files, field):
@@ -161,24 +161,52 @@ class Advert(models.Model):
                 image_generator = U24Thumbnail(source=field.file)
                 file = ImageCacheFile(image_generator)
                 file.generate()
-                files.append(("userfile[]", open(file.path, 'rb')))
+                files.append(os.path.join(settings.MEDIA_ROOT, file.name))
 
         add_thumb_if_not_none(post_files, self.photo1)
         add_thumb_if_not_none(post_files, self.photo2)
         add_thumb_if_not_none(post_files, self.photo3)
         add_thumb_if_not_none(post_files, self.photo4)
+
+        # отправка данных через селениум
+        from selenium import webdriver
+        from selenium.webdriver.chrome.options import Options
+        from selenium.webdriver.support.select import Select
+        # инициализация драйвера
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")  # running as root support
+        driver = webdriver.Chrome(chrome_options=chrome_options)
         try:
-            url = "http://www.uhta24.ru/obyavlenia/dobavit/"
-            r = s.post(url, data=post_data, files=post_files)
-            self.response_text = r.status_code
-            settings.LOGGER.info("Cron %s. ID %s sent. Response: %s" %
-                                 (cron_id, self.id, r.status_code))
-            if r.status_code == requests.codes.ok:
-                self.status = self.SENT
-            else:
-                self.status = self.ERROR
-                was_error = True
-        except IncompleteRead:
+            driver.get("https://uhta24.ru/obyavlenia/dobavit/")
+            sleep(1)
+            chp1 = Select(driver.find_element_by_id("chp1"))
+            chp1.select_by_value(str(post_data['chpodrazdel']))
+            # после выбора категории первого уровня ждём несколько секунд для загрузки категорий второго уровня
+            sleep(3)
+            chp2 = Select(driver.find_element_by_id("chp2"))
+            chp2.select_by_value(post_data['chpunkt'])
+            obt1 = driver.find_element_by_id("obt1")
+            obt1.send_keys(post_data['obtext'])
+            obtelefon = driver.find_element_by_name("obtelefon")
+            obtelefon.send_keys(post_data['obtelefon'])
+            obemail = driver.find_element_by_name("obemail")
+            obemail.send_keys(post_data['obemail'])
+            # заполняем файлинпуты
+            userfiles = driver.find_elements_by_name('userfile[]')
+            file_index = 0
+            for userfile in userfiles:
+                if file_index < len(post_files):
+                    if os.path.exists(post_files[file_index]):
+                        userfile.send_keys(post_files[file_index])
+                    file_index += 1
+
+            driver.find_element_by_css_selector('form[name="obformdob1"] input[type="submit"]').click()
+            self.status = self.SENT
+            settings.LOGGER.info("Cron %s. ID %s sent." %(cron_id, self.id))
+        except Exception as e:
+            self.response_text = str(e)
             self.status = self.ERROR
             was_error = True
         self.status_changed = datetime.datetime.now()
