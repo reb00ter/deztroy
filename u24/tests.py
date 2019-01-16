@@ -1,9 +1,18 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 
 # Create your tests here.
 from django.urls import reverse
 
 from u24.models import Phone, Category, SubCategory
+
+
+def create_john():
+    user = User(username="john")
+    user.set_password("qwerty")
+    user.is_superuser = True
+    user.save()
+    return user
 
 
 def init_categories():
@@ -36,6 +45,8 @@ class TestPhone(TestCase):
 class TestCategoriesJSON(TestCase):
     def test_get_categories(self):
         init_categories()
+        user = create_john()
+        self.client.force_login(user)
         response = self.client.get(reverse('categories_json'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 2)
