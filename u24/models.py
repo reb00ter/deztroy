@@ -186,7 +186,7 @@ class Advert(models.Model):
             # после выбора категории первого уровня ждём несколько секунд для загрузки категорий второго уровня
             sleep(3)
             chp2 = Select(driver.find_element_by_id("chp2"))
-            chp2.select_by_value(post_data['chpunkt'])
+            chp2.select_by_value(str(post_data['chpunkt']))
             obt1 = driver.find_element_by_id("obt1")
             obt1.send_keys(post_data['obtext'])
             obtelefon = driver.find_element_by_name("obtelefon")
